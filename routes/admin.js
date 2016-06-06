@@ -41,6 +41,27 @@ router.get('/exams', function(req, res) {
         }
     });
 });
+router.get('/proctor_statistics', function(req, res) {
+ var args = {
+        data: req.query
+    };
+    //db.proctor_statistics.search(args, function(err, data, count) {
+    db.proctor_statistics.search_by_date(args, function(err, data, count) {
+        if (!err && data) {
+            res.json({
+                "total": count,
+                "rows": data
+            });
+        }
+        else {
+            res.json({
+                "total": 0,
+                "rows": [], 
+                "err": err
+            });
+        }
+    });
+});
 // Get list of schedules
 router.get('/schedules', function(req, res) {
     var args = {

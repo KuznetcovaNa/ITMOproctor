@@ -84,6 +84,9 @@ define([
                     }, {
                         id: 'schedules',
                         text: i18n.t('admin.schedules.title')
+                    }, {
+                        id: 'proctor_statistics',
+                        text: i18n.t('admin.proctor_statistics.title')
                     }]
                 }, {
                     text: i18n.t('admin.help'),

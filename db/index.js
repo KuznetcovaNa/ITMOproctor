@@ -737,6 +737,75 @@ var db = {
             });
         }
     },
+    proctor_statistics: {
+        search: function(args, callback) {
+            var query = {};
+            if (args.data.role) query.role = Number(args.data.role);
+            var rows = args.data.rows ? Number(args.data.rows) : 0;
+            var page = args.data.page ? Number(args.data.page) - 1 : 0;
+            // Query
+            var Exam = require('./models/exam');
+            var User = require('./models/user');
+            var proctors_with_exams = [];
+            var proctors_number = 0;
+            User.count(query, function(err, count) {
+                if (err || !count) return callback(err);
+                User.find(query).sort('lastname firstname middlename')
+                    .skip(rows * page).limit(rows).exec(function(err, data) {
+                        data.forEach(function(item, i, arr){
+                            Exam.find({inspector: item}, function(err, docs){
+                                if (docs.length && !err){
+                                    proctors_with_exams.push({proctor_info: item, exams: docs});
+                                    proctors_number++;
+                                }
+                                if(i === (arr.length-1)){
+                                    callback(err, proctors_with_exams, proctors_number);
+                                }
+                            });
+                        });
+                    });
+            });
+        },
+        search_by_date: function(args, callback) {
+            var query = {};
+            // var toDate = args.data.to ? moment(args.data.to) : null;
+            var left_date = moment(args.data.left_date);
+            var right_date = moment(args.data.right_date);
+            var spec_proctor = args.data.proctor ? args.data.proctor : null;
+            
+            if (args.data.role) query.role = Number(args.data.role);
+            if (args.data.proctor_id) query._id = args.data.proctor_id;
+            
+            var rows = args.data.rows ? Number(args.data.rows) : 0;
+            var page = args.data.page ? Number(args.data.page) - 1 : 0;
+            // Query
+            var Exam = require('./models/exam');
+            var User = require('./models/user');
+            var proctors_with_exams = [];
+            var proctors_number = 0;
+            User.count(query, function(err, count) {
+                if (err || !count) return callback(err);
+                User.find(query).sort('lastname firstname middlename')
+                    .skip(rows * page).limit(rows).exec(function(err, data) {
+                        data.forEach(function(item, i, arr){
+                            Exam.find({inspector: item, rightDate: {"$gt": left_date, "$lt": right_date}}, function(err, docs){
+                                if (docs.length && !err){
+                                    proctors_with_exams.push({proctor_info: item, exams: docs});
+                                    proctors_number++;
+                                }
+                                if(i === (arr.length-1)){
+                                    callback(err, proctors_with_exams, proctors_number);
+                                }
+                            });
+                        });
+                    });
+            });
+        },
+        get: function(args, callback) {
+            var User = require('./models/user');
+            User.findById(args.userId).exec(callback);
+        }
+    },
     schedule: {
         list: function(args, callback) {
             var Schedule = require('./models/schedule');

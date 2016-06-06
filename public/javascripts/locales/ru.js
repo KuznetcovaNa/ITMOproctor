@@ -407,6 +407,9 @@ define({
             "endDate": "Окончание работы",
             "concurrent": "Кол-во сессий"
         },
+        "proctor_statistics": {
+            "title": "Статистика по прокторам"
+        },
         "about": {
             "title": "О системе",
             "app": "ITMOproctor",
