@@ -36,33 +36,6 @@ define([
             this.$el.html(tpl(data));
             $.parser.parse(this.$el);
 
-            // Menu events
-            this.$Menu = $('#users-menu');
-            this.$Menu.menu({
-                onClick: function(item) {
-                    switch (item.name) {
-                        case "add":
-                            self.doAdd();
-                            break;
-                        case "edit":
-                            self.doEdit();
-                            break;
-                        case "remove":
-                            self.doRemove();
-                            break;
-                        case "send":
-                            self.doSend();
-                            break;
-                        case "import":
-                            self.doImport();
-                            break;
-                        case "export":
-                            self.doExport();
-                            break;
-                    }
-                }
-            });
-
             this.$TextSearch = this.$(".text-search");
             this.$TextSearch.searchbox({
                 searcher: this.doSearch.bind(this)
@@ -183,55 +156,6 @@ define([
             var element = e.currentTarget;
             var userId = $(element).attr('data-id');
             this.view.userViewer.doOpen(userId);
-        },
-        doAdd: function() {
-            var self = this;
-            var callback = function() {
-                self.$Grid.datagrid('reload');
-            };
-            this.view.userEditor.doOpen(null, callback);
-        },
-        doEdit: function() {
-            var selected = this.$Grid.datagrid('getSelected');
-            if (!selected) return;
-            var self = this;
-            var callback = function() {
-                self.$Grid.datagrid('reload');
-            };
-            this.view.userEditor.doOpen(selected._id, callback);
-        },
-        removeRows: function(rows) {
-            var self = this;
-            var User = Backbone.Model.extend({
-                urlRoot: 'user'
-            });
-            var onProgress = _.progressMessager(
-                i18n.t('admin.remove.progressMsg'),
-                rows.length,
-                function() {
-                    self.$Grid.datagrid('reload');
-                });
-            rows.forEach(function(row, i, arr) {
-                _.defer(function() {
-                    var user = new User({
-                        _id: row._id
-                    });
-                    user.destroy({
-                        success: onProgress,
-                        error: onProgress
-                    });
-                });
-            });
-        },
-        doRemove: function() {
-            var selected = this.$Grid.datagrid('getSelections');
-            if (!selected.length) return;
-            var self = this;
-            $.messager.confirm(i18n.t('admin.remove.confirm.title'),
-                i18n.t('admin.remove.confirm.message'),
-                function(r) {
-                    if (r) self.removeRows(selected);
-                });
         }
     });
     return View;
