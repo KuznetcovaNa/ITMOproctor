@@ -410,7 +410,9 @@ define({
         "proctor_statistics": {
             "title": "Статистика по прокторам",
             "searchTextPrompt": "Поиск проктора...",
-            "proctorProfile": "Профиль проктора"
+            "proctorProfile": "Профиль проктора",
+            "fromDatePrompt": "Начиная с...",
+            "toDatePrompt": "До..."
         },
         "about": {
             "title": "О системе",

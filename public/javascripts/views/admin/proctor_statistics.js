@@ -35,6 +35,25 @@ define([
             };
             this.$el.html(tpl(data));
             $.parser.parse(this.$el);
+            
+            this.$FromDate = this.$(".date-from");
+            this.$FromDate.datebox({
+                value: app.now().format("DD.MM.YYYY"),
+                delay: 0,
+                onChange: function(date) {
+                    var valid = moment(date, "DD.MM.YYYY", true).isValid();
+                    if (!date || valid) self.doSearch();
+                }
+            });
+            this.$ToDate = this.$(".date-to");
+            this.$ToDate.datebox({
+                value: app.now().add(1, 'days').format("DD.MM.YYYY"),
+                delay: 0,
+                onChange: function(date) {
+                    var valid = moment(date, "DD.MM.YYYY", true).isValid();
+                    if (!date || valid) self.doSearch();
+                }
+            });
 
             this.$TextSearch = this.$(".text-search");
             this.$TextSearch.searchbox({
@@ -97,7 +116,7 @@ define([
                 method: 'get',
                 queryParams: {
                     left_date: app.now().startOf('day').toJSON(),
-                    right_date: app.now().startOf('day').add(5, 'days').toJSON(),
+                    right_date: app.now().startOf('day').add(1, 'days').toJSON(),
                     //proctor_id: "5738fc8045a3a2880bb059fa",
                 },
                 loadFilter: function(data) {
@@ -149,8 +168,22 @@ define([
             }
             return val;
         },
+        getDates: function() {
+            var fromVal = this.$FromDate.datebox('getValue');
+            var toVal = this.$ToDate.datebox('getValue');
+            var fromDate = fromVal ? moment(fromVal, 'DD.MM.YYYY').toJSON() : null;
+            var toDate = toVal ? moment(toVal, 'DD.MM.YYYY').toJSON() : null;
+            return {
+                from: fromDate,
+                to: toDate
+            };
+        },
         doSearch: function() {
-            this.$Grid.datagrid('reload');
+            var dates = this.getDates();
+            this.$Grid.datagrid('load', {
+                left_date: dates.from,
+                right_date: dates.to
+            });
         },
         doUserInfo: function(e) {
             var element = e.currentTarget;
