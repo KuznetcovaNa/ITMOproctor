@@ -408,7 +408,9 @@ define({
             "concurrent": "Кол-во сессий"
         },
         "proctor_statistics": {
-            "title": "Статистика по прокторам"
+            "title": "Статистика по прокторам",
+            "searchTextPrompt": "Поиск проктора...",
+            "proctorProfile": "Профиль проктора"
         },
         "about": {
             "title": "О системе",

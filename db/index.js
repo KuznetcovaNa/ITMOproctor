@@ -800,10 +800,6 @@ var db = {
                         });
                     });
             });
-        },
-        get: function(args, callback) {
-            var User = require('./models/user');
-            User.findById(args.userId).exec(callback);
         }
     },
     schedule: {
