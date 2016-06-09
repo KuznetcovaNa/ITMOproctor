@@ -69,40 +69,17 @@ define([
                         width: 100,
                         sortable: true
                     }, {
-                        field: 'provider',
-                        title: i18n.t('admin.users.provider'),
-                        width: 100,
-                        sortable: true
-                    }, {
                         field: 'fullname',
                         title: i18n.t('admin.users.fullname'),
                         width: 200,
-                        sortable: true,
-                        sorter: function(a, b) {
-                            if (!a || !b) return 0;
-                            var fa = a.lastname + ' ' + a.firstname + ' ' + a.middlename;
-                            var fb = b.lastname + ' ' + b.firstname + ' ' + b.middlename;
-                            return fa.localeCompare(fb);
-                        },
+                        sortable: false,
                         formatter: self.formatName.bind(this)
                     }, {
-                        field: 'role',
-                        title: i18n.t('admin.users.role'),
+                        field: 'stats_active',
+                        title: i18n.t('admin.proctor_statistics.stats_status'),
                         width: 100,
-                        sortable: true,
-                        formatter: self.formatRole.bind(this)
-                    }, {
-                        field: 'created',
-                        title: i18n.t('admin.users.created'),
-                        width: 100,
-                        sortable: true,
-                        formatter: self.formatDate.bind(this)
-                    }, {
-                        field: 'active',
-                        title: i18n.t('admin.users.activeTitle'),
-                        width: 100,
-                        sortable: true,
-                        formatter: self.formatActive.bind(this)
+                        sortable: false,
+                        formatter: self.format_stats.bind(this)
                     }]
                 ],
                 remoteSort: false,
@@ -117,6 +94,7 @@ define([
                 queryParams: {
                     left_date: app.now().startOf('day').toJSON(),
                     right_date: app.now().startOf('day').add(1, 'days').toJSON(),
+                    role: 2
                     //proctor_id: "5738fc8045a3a2880bb059fa",
                 },
                 loadFilter: function(data) {
@@ -145,28 +123,22 @@ define([
             var tpl = _.template(this.templates['user-item-tpl']);
             return tpl(data);
         },
+        format_stats: function(val, row){
+            if (!row) return;
+            var data = {
+                i18n: i18n,
+                row: row
+            };
+            if (row.stats_is_active) {
+                var tpl = _.template(this.templates['user-stats-tpl']);
+                return tpl(data);
+            } else {
+               return i18n.t('admin.proctor_statistics.stats_not_active'); 
+            }
+        },
         formatDate: function(val, row) {
             if (!val) return;
             return moment(val).format('DD.MM.YYYY');
-        },
-        formatActive: function(val, row) {
-            switch (val) {
-                case true:
-                    return "<span style='color:green;'>" + i18n.t('user.active.true') + "</span>";
-                case false:
-                    return "<span style='color:purple;'>" + i18n.t('user.active.false') + "</span>";
-            }
-        },
-        formatRole: function(val, row) {
-            switch (val) {
-                case 1:
-                    return i18n.t('user.role.1');
-                case 2:
-                    return i18n.t('user.role.2');
-                case 3:
-                    return i18n.t('user.role.3');
-            }
-            return val;
         },
         getDates: function() {
             var fromVal = this.$FromDate.datebox('getValue');
@@ -182,7 +154,8 @@ define([
             var dates = this.getDates();
             this.$Grid.datagrid('load', {
                 left_date: dates.from,
-                right_date: dates.to
+                right_date: dates.to,
+                role: 2
             });
         },
         doUserInfo: function(e) {

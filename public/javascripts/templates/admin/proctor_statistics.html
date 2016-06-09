@@ -8,7 +8,12 @@
 </div>
 </script>
 <script type="text/template" id="user-item-tpl">
-<a href="javascript:void(0);" class="user-info" data-id="<%- row.proctor_info._id %>" title="<%- i18n.t('admin.proctor_statistics.proctorProfile') %>">
-    <%- row.proctor_info.lastname || i18n.t('user.unknown') %> <%- row.proctor_info.firstname %> <%- row.proctor_info.middlename %>
+<a href="javascript:void(0);" class="user-info" data-id="<%- row._id %>" title="<%- i18n.t('admin.proctor_statistics.proctorProfile') %>">
+    <%- row.lastname || i18n.t('user.unknown') %> <%- row.firstname %> <%- row.middlename %>
+</a>
+</script>
+<script type="text/template" id="user-stats-tpl">
+<a href="javascript:void(0);" class="user-info" data-id="<%- row._id %>" title="<%- i18n.t('admin.proctor_statistics.proctorProfile') %>">
+    <%- i18n.t('admin.proctor_statistics.stats_is_active') %>
 </a>
 </script>

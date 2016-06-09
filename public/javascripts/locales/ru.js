@@ -412,7 +412,10 @@ define({
             "searchTextPrompt": "Поиск проктора...",
             "proctorProfile": "Профиль проктора",
             "fromDatePrompt": "Начиная с...",
-            "toDatePrompt": "До..."
+            "toDatePrompt": "До...",
+            "stats_status": "Подробная статистика",
+            "stats_is_active": "Просмотреть",
+            "stats_not_active": "Экзаменов не обнаружено"
         },
         "about": {
             "title": "О системе",
