@@ -755,7 +755,7 @@ var db = {
                 User.find(query).sort('lastname firstname middlename')
                     .skip(rows * page).limit(rows).exec(function(err, data) {
                         data.forEach(function(item, i, arr){
-                            Exam.find({inspector: item, rightDate: {"$gt": left_date, "$lt": right_date}}, function(err, docs){
+                            Exam.find({inspector: item, leftDate: {"$gte": left_date, "$lte": right_date}}, function(err, docs){
                                 if (!err){
                                     if (docs.length) {
                                         proctors_with_exams.push({stats_is_active: true});

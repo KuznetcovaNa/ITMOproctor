@@ -411,11 +411,14 @@ define({
             "title": "Статистика по прокторам",
             "searchTextPrompt": "Поиск проктора...",
             "proctorProfile": "Профиль проктора",
+            "proctor": "Проктор",
             "fromDatePrompt": "Начиная с...",
             "toDatePrompt": "До...",
             "stats_status": "Подробная статистика",
             "stats_is_active": "Просмотреть",
-            "stats_not_active": "Экзаменов не обнаружено"
+            "stats_not_active": "Экзамены не обнаружены",
+            "all_proctors": "Все прокторы",
+            "no_proctor": "Выберите проктора для просмотра подробной статистики"
         },
         "about": {
             "title": "О системе",

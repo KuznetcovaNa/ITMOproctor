@@ -1,5 +1,5 @@
 //
-// Users view
+// Proctor statistics view
 //
 define([
     "i18n",
@@ -10,7 +10,8 @@ define([
     console.log('views/admin/proctor_statistics.js');
     var View = Backbone.View.extend({
         events: {
-            "click .user-info": "doUserInfo"
+            "click .user-info": "doUserInfo",
+            "click .user-stats": "do_user_stats"
         },
         initialize: function() {
             // Templates
@@ -21,6 +22,7 @@ define([
                 userEditor: new UserEditor()
             };
         },
+        stats_data: {},
         destroy: function() {
             for (var v in this.view) {
                 if (this.view[v]) this.view[v].destroy();
@@ -70,7 +72,7 @@ define([
                         sortable: true
                     }, {
                         field: 'fullname',
-                        title: i18n.t('admin.users.fullname'),
+                        title: i18n.t('admin.proctor_statistics.proctor'),
                         width: 200,
                         sortable: false,
                         formatter: self.formatName.bind(this)
@@ -95,13 +97,16 @@ define([
                     left_date: app.now().startOf('day').toJSON(),
                     right_date: app.now().startOf('day').add(1, 'days').toJSON(),
                     role: 2
-                    //proctor_id: "5738fc8045a3a2880bb059fa",
                 },
                 loadFilter: function(data) {
-                    console.log(data);
                     data = data || [];
                     var text = self.$TextSearch.textbox('getValue').trim();
-                    if (_.isEmpty(text)) return data;
+                    self.stats_data = data;
+                    self.init_stats_plot("#plot-all-proctors", false, i18n.t('admin.proctor_statistics.all_proctors'));
+                    self.init_stats_plot("#plot-one-proctor", false, i18n.t('admin.proctor_statistics.no_proctor'));
+                    if (_.isEmpty(text)) {
+                        return data;
+                    }
                     else {
                         var rows = _.textSearch(data.rows, text);
                         return {
@@ -111,8 +116,36 @@ define([
                     }
                 }
             });
+            
+            this.$('#users-statistics-plot').panel({
+                height:400,
+                noheader: true
+            });
 
             return this;
+        },
+        init_stats_plot: function(plot_selector, proctor_id, title){
+            $(plot_selector).empty();
+            var proctor_name;
+            console.log(this.stats_data);
+            var vis = d3.select(plot_selector)
+            if (!proctor_id) {
+                proctor_name =  title;
+            } else {
+                proctor_name = this.stats_data.rows[this.get_key_by_id(this.stats_data.rows, proctor_id)].username;
+            }
+            vis.append("text")
+                .attr("x", 10)
+                .attr("y", 20)
+                .text(proctor_name);
+        },
+        get_key_by_id: function(obj, value){
+            for (var key in obj) {
+                if (obj[key]._id == value) {
+                    return key;
+                }
+            }
+            return null;
         },
         formatName: function(val, row) {
             if (!row) return;
@@ -162,6 +195,11 @@ define([
             var element = e.currentTarget;
             var userId = $(element).attr('data-id');
             this.view.userViewer.doOpen(userId);
+        },
+        do_user_stats: function(e) {
+            var element = e.currentTarget;
+            var userId = $(element).attr('data-id');
+            this.init_stats_plot("#plot-one-proctor", userId);
         }
     });
     return View;

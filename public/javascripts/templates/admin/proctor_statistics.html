@@ -1,4 +1,8 @@
 <script type="text/template" id="main-tpl">
+<div id="users-statistics-plot" style="padding:30px;">
+    <svg id="plot-all-proctors"></svg>
+    <svg id="plot-one-proctor"></svg>
+</div>
 <table id="users-grid" class="easyui-datagrid" data-options="toolbar:'#users-toolbar',border:false,fitColumns:true,fit:true">
 </table>
 <div id="users-toolbar" style="padding-left:5px;">
@@ -6,6 +10,7 @@
     <input name="date-to" class="easyui-datebox date-to" style="width:110px;" data-options="prompt:'<%- i18n.t('admin.proctor_statistics.toDatePrompt') %>'">
     <input name="user-text-search" class="easyui-searchbox text-search" style="width:350px" data-options="prompt: '<%- i18n.t('admin.proctor_statistics.searchTextPrompt') %>'">
 </div>
+
 </script>
 <script type="text/template" id="user-item-tpl">
 <a href="javascript:void(0);" class="user-info" data-id="<%- row._id %>" title="<%- i18n.t('admin.proctor_statistics.proctorProfile') %>">
@@ -13,7 +18,7 @@
 </a>
 </script>
 <script type="text/template" id="user-stats-tpl">
-<a href="javascript:void(0);" class="user-info" data-id="<%- row._id %>" title="<%- i18n.t('admin.proctor_statistics.proctorProfile') %>">
+<a href="javascript:void(0);" class="user-stats" data-id="<%- row._id %>" title="<%- i18n.t('admin.proctor_statistics.proctorProfile') %>">
     <%- i18n.t('admin.proctor_statistics.stats_is_active') %>
 </a>
 </script>
