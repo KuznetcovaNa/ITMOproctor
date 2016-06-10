@@ -22,6 +22,26 @@ define([
                 userEditor: new UserEditor()
             };
         },
+        exams_all_proctors: {
+            exams_by_days: {},
+            count_all_exams: 0,
+            count_all_days: 0,
+            all_planned: 0,
+            all_not_planned: 0,
+            all_awaiting: 0,
+            all_running: 0,
+            all_accepted: 0,
+            all_interrupted: 0,
+            all_missed: 0,
+            avg_planned: 0,
+            avg_not_planned: 0,
+            avg_awaiting: 0,
+            avg_running: 0,
+            avg_accepted: 0,
+            avg_interrupted: 0,
+            avg_missed: 0
+        },
+        exams_every_proctor: [],
         stats_data: {},
         destroy: function() {
             for (var v in this.view) {
@@ -94,14 +114,15 @@ define([
                 url: 'admin/proctor_statistics',
                 method: 'get',
                 queryParams: {
-                    left_date: app.now().startOf('day').toJSON(),
-                    right_date: app.now().startOf('day').add(1, 'days').toJSON(),
+                    left_date: self.getDates().from,
+                    right_date: self.getDates().to,
                     role: 2
                 },
                 loadFilter: function(data) {
                     data = data || [];
                     var text = self.$TextSearch.textbox('getValue').trim();
                     self.stats_data = data;
+                    self.calculate_exams(self.getDates().from, self.getDates().to);
                     self.init_stats_plot("#plot-all-proctors", false, i18n.t('admin.proctor_statistics.all_proctors'));
                     self.init_stats_plot("#plot-one-proctor", false, i18n.t('admin.proctor_statistics.no_proctor'));
                     if (_.isEmpty(text)) {
@@ -124,10 +145,41 @@ define([
 
             return this;
         },
+        get_exam_status: function(row){
+            var status = 0;
+            var now = app.now();
+            if (row.rightDate) {
+                var rightDate = moment(row.rightDate);
+                if (rightDate <= now) status = 6;
+            }
+            if (row.beginDate && row.endDate) {
+                var beginDate = moment(row.beginDate);
+                var endDate = moment(row.endDate);
+                if (beginDate > now) status = 1;
+                if (endDate <= now) status = 6;
+                if (beginDate <= now && endDate > now) status = 2;
+                if (row.startDate) status = 3;
+                if (row.resolution === true) status = 4;
+                if (row.resolution === false) status = 5;
+            }
+            return status;
+        },
+        calculate_exams: function(left_date, right_date){
+            var all_exams = [].concat.apply([], this.stats_data.rows.map(function(x){return x.exams}));
+            console.log(all_exams);
+            for (var i=0; i<all_exams.length; i++){
+                var status = this.get_exam_status(all_exams[i]);
+                console.log(status);
+                this.exams_all_proctors.count_all_exams++;
+                
+                
+                
+            }
+            console.log(this.exams_all_proctors);
+        },
         init_stats_plot: function(plot_selector, proctor_id, title){
             $(plot_selector).empty();
             var proctor_name;
-            console.log(this.stats_data);
             var vis = d3.select(plot_selector)
             if (!proctor_id) {
                 proctor_name =  title;
