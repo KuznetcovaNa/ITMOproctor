@@ -236,6 +236,7 @@ define([
             exams_this_proctor.avg_missed      = exams_this_proctor.all_missed      / days_count;
             
             console.log(exams_this_proctor);
+            return exams_this_proctor;
         },
         
         calculate_exams: function(left_date, right_date){
@@ -326,30 +327,52 @@ define([
         init_plot_all_proctors: function(part_selector, title){
             $(part_selector).empty();
             var div = d3.select(part_selector);
-            div.append("html")
-                .html('<div>' + title + '</div><div>Всего ' + this.exams_all_proctors.count_all_exams + ' экзаменов</div><svg></svg>');
+            div.append("div")
+                .html('<h3>' + title + '</h3><div>'
+                 + i18n.t('admin.proctor_statistics.exams_title') + this.exams_all_proctors.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
+                + this.exams_all_proctors.all_planned + i18n.t('admin.proctor_statistics.planned_title')
+                + this.exams_all_proctors.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title')
+                + this.exams_all_proctors.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title')
+                + this.exams_all_proctors.all_running + i18n.t('admin.proctor_statistics.running_title')
+                + this.exams_all_proctors.all_accepted + i18n.t('admin.proctor_statistics.accepted_title')
+                + this.exams_all_proctors.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title')
+                + this.exams_all_proctors.all_missed + i18n.t('admin.proctor_statistics.missed_title')
+                + '</div><svg></svg>');
             var svg = div.select("svg");
             svg.append("text")
                 .attr('x', 10)
                 .attr('y', 10)
-                .text("atat");
+                .text("plot");
         },
         init_plot_one_proctor: function(part_selector, proctor_id, title){
             $(part_selector).empty();
             var proctor_name = title;
             var user_stats;
+            var div = d3.select(part_selector);
             if (proctor_id) {
                 proctor_name = this.stats_data.rows[this.get_key_by_id(this.stats_data.rows, proctor_id)].username;
                 user_stats = this.calculate_exams_for_proctor(this.getDates().from, this.getDates().to, proctor_id);
+                console.log(user_stats);
+                div.append("div")
+                    .html('<h3>' + proctor_name + '</h3><div>'
+                    + i18n.t('admin.proctor_statistics.exams_title') + user_stats.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
+                    + user_stats.all_planned + i18n.t('admin.proctor_statistics.planned_title')
+                    + user_stats.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title')
+                    + user_stats.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title')
+                    + user_stats.all_running + i18n.t('admin.proctor_statistics.running_title')
+                    + user_stats.all_accepted + i18n.t('admin.proctor_statistics.accepted_title')
+                    + user_stats.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title')
+                    + user_stats.all_missed + i18n.t('admin.proctor_statistics.missed_title')
+                    + '</div><svg></svg>');
+                var svg = div.select("svg");
+                svg.append("text")
+                    .attr('x', 10)
+                    .attr('y', 10)
+                    .text("plot");
+            } else {
+                div.append("h3")
+                    .html(proctor_name);
             }
-            var div = d3.select(part_selector);
-            div.append("html")
-                .html('<div>' + proctor_name + '</div><div>Всего ' + this.exams_all_proctors.count_all_exams + ' экзаменов</div><svg></svg>');
-            var svg = div.select("svg");
-            svg.append("text")
-                .attr('x', 10)
-                .attr('y', 10)
-                .text("atat");
         },
         get_key_by_id: function(obj, value){
             for (var key in obj) {

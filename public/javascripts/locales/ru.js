@@ -418,7 +418,16 @@ define({
             "stats_is_active": "Просмотреть",
             "stats_not_active": "Экзамены не обнаружены",
             "all_proctors": "Все прокторы",
-            "no_proctor": "Выберите проктора для просмотра подробной статистики"
+            "no_proctor": "Выберите проктора для просмотра подробной статистики",
+            "exams_title": "Экзамены: ",
+            "not_planned_title": " не запланировано, ",
+            "planned_title": " запланировано, ",
+            "awaiting_title": " ожидает, ",
+            "running_title": " идет, ",
+            "accepted_title": " принято, ",
+            "interrupted_title": " прервано, ",
+            "missed_title": " пропущено.",
+            "all_title": " всего, "
         },
         "about": {
             "title": "О системе",
