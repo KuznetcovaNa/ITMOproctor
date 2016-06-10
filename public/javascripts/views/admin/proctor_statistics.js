@@ -23,8 +23,6 @@ define([
             };
         },
         exams_all_proctors: {},
-            
-        exams_every_proctor: [],
         stats_data: {},
         destroy: function() {
             for (var v in this.view) {
@@ -106,8 +104,8 @@ define([
                     var text = self.$TextSearch.textbox('getValue').trim();
                     self.stats_data = data;
                     self.calculate_exams(self.getDates().from, self.getDates().to);
-                    self.init_stats_plot("#plot-all-proctors", false, i18n.t('admin.proctor_statistics.all_proctors'));
-                    self.init_stats_plot("#plot-one-proctor", false, i18n.t('admin.proctor_statistics.no_proctor'));
+                    self.init_plot_all_proctors("#part-all-proctors", i18n.t('admin.proctor_statistics.all_proctors'));
+                    self.init_plot_one_proctor("#part-one-proctor", false, i18n.t('admin.proctor_statistics.no_proctor'));
                     if (_.isEmpty(text)) {
                         return data;
                     }
@@ -147,8 +145,102 @@ define([
             }
             return status;
         },
+        
+        calculate_exams_for_proctor: function(left_date, right_date, proctor_id){
+            var all_exams = [];
+            for (var i = 0; i < this.stats_data.rows.length; i++) {
+                if(this.stats_data.rows[i]._id == proctor_id){
+                    all_exams = this.stats_data.rows[i].exams;
+                    break;
+                }
+            }
+            
+            var exams_this_proctor = {
+                exams_by_days: {},
+                count_all_exams: 0,
+                count_all_days: 0,
+                all_planned: 0,
+                all_not_planned: 0,
+                all_awaiting: 0,
+                all_running: 0,
+                all_accepted: 0,
+                all_interrupted: 0,
+                all_missed: 0,
+                avg_planned: 0,
+                avg_not_planned: 0,
+                avg_awaiting: 0,
+                avg_running: 0,
+                avg_accepted: 0,
+                avg_interrupted: 0,
+                avg_missed: 0
+            };
+            
+            for (var d = new Date(left_date); moment(d) <= moment(right_date); d.setDate(d.getDate() + 1)) {
+                exams_this_proctor.exams_by_days[this.formatDate(d)] = {
+                    planned: 0,
+                    not_planned: 0,
+                    awaiting: 0,
+                    running: 0,
+                    accepted: 0,
+                    interrupted: 0,
+                    missed: 0
+                };
+            }
+            var days_count = Object.keys(exams_this_proctor.exams_by_days).length;
+            
+            for (var i=0; i<all_exams.length; i++){
+                var cur = all_exams[i];
+                var status = this.get_exam_status(cur);
+                exams_this_proctor.count_all_exams++;
+                
+                var valuable_date = this.formatDate(cur.startDate ? cur.startDate : (cur.beginDate ? cur.beginDate : cur.leftDate));
+                
+                switch(status){
+                    case 0:
+                        exams_this_proctor.all_not_planned++;
+                        exams_this_proctor.exams_by_days[valuable_date].not_planned++;
+                        break;
+                    case 1:
+                        exams_this_proctor.all_planned++;
+                        exams_this_proctor.exams_by_days[valuable_date].planned++;
+                        break;
+                    case 2:
+                        exams_this_proctor.all_awaiting++;
+                        exams_this_proctor.exams_by_days[valuable_date].awaiting++;
+                        break;
+                    case 3:
+                        exams_this_proctor.all_running++;
+                        exams_this_proctor.exams_by_days[valuable_date].running++;
+                        break;
+                    case 4:
+                        exams_this_proctor.all_accepted++;
+                        exams_this_proctor.exams_by_days[valuable_date].accepted++;
+                        break;
+                    case 5:
+                        exams_this_proctor.all_interrupted++;
+                        exams_this_proctor.exams_by_days[valuable_date].interrupted++;
+                        break;
+                    case 6:
+                        exams_this_proctor.all_missed++;
+                        exams_this_proctor.exams_by_days[valuable_date].missed++;
+                        break;
+                }
+            }
+            exams_this_proctor.count_all_days  = days_count;
+            exams_this_proctor.avg_not_planned = exams_this_proctor.all_not_planned / days_count;
+            exams_this_proctor.avg_planned     = exams_this_proctor.all_planned     / days_count;
+            exams_this_proctor.avg_awaiting    = exams_this_proctor.all_awaiting    / days_count;
+            exams_this_proctor.avg_running     = exams_this_proctor.all_running     / days_count;
+            exams_this_proctor.avg_accepted    = exams_this_proctor.all_accepted    / days_count;
+            exams_this_proctor.avg_interrupted = exams_this_proctor.all_interrupted / days_count;
+            exams_this_proctor.avg_missed      = exams_this_proctor.all_missed      / days_count;
+            
+            console.log(exams_this_proctor);
+        },
+        
         calculate_exams: function(left_date, right_date){
             var all_exams = [].concat.apply([], this.stats_data.rows.map(function(x){return x.exams}));
+            this.exams_every_proctor = {};
             this.exams_all_proctors = {
                 exams_by_days: {},
                 count_all_exams: 0,
@@ -167,9 +259,7 @@ define([
                 avg_accepted: 0,
                 avg_interrupted: 0,
                 avg_missed: 0
-            },
-            
-            console.log(all_exams);
+            };
             for (var d = new Date(left_date); moment(d) <= moment(right_date); d.setDate(d.getDate() + 1)) {
                 this.exams_all_proctors.exams_by_days[this.formatDate(d)] = {
                     planned: 0,
@@ -187,7 +277,6 @@ define([
             for (var i=0; i<all_exams.length; i++){
                 var cur = all_exams[i];
                 var status = this.get_exam_status(cur);
-                //console.log(status);
                 this.exams_all_proctors.count_all_exams++;
                 
                 var valuable_date = this.formatDate(cur.startDate ? cur.startDate : (cur.beginDate ? cur.beginDate : cur.leftDate));
@@ -224,7 +313,6 @@ define([
                 }
             }
             this.exams_all_proctors.count_all_days = days_count;
-            
             this.exams_all_proctors.avg_not_planned = this.exams_all_proctors.all_not_planned / days_count;
             this.exams_all_proctors.avg_planned     = this.exams_all_proctors.all_planned     / days_count;
             this.exams_all_proctors.avg_awaiting    = this.exams_all_proctors.all_awaiting    / days_count;
@@ -235,19 +323,33 @@ define([
             
             console.log(this.exams_all_proctors);
         },
-        init_stats_plot: function(plot_selector, proctor_id, title){
-            $(plot_selector).empty();
-            var proctor_name;
-            var vis = d3.select(plot_selector)
-            if (!proctor_id) {
-                proctor_name =  title;
-            } else {
+        init_plot_all_proctors: function(part_selector, title){
+            $(part_selector).empty();
+            var div = d3.select(part_selector);
+            div.append("html")
+                .html('<div>' + title + '</div><div>Всего ' + this.exams_all_proctors.count_all_exams + ' экзаменов</div><svg></svg>');
+            var svg = div.select("svg");
+            svg.append("text")
+                .attr('x', 10)
+                .attr('y', 10)
+                .text("atat");
+        },
+        init_plot_one_proctor: function(part_selector, proctor_id, title){
+            $(part_selector).empty();
+            var proctor_name = title;
+            var user_stats;
+            if (proctor_id) {
                 proctor_name = this.stats_data.rows[this.get_key_by_id(this.stats_data.rows, proctor_id)].username;
+                user_stats = this.calculate_exams_for_proctor(this.getDates().from, this.getDates().to, proctor_id);
             }
-            vis.append("text")
-                .attr("x", 10)
-                .attr("y", 20)
-                .text(proctor_name);
+            var div = d3.select(part_selector);
+            div.append("html")
+                .html('<div>' + proctor_name + '</div><div>Всего ' + this.exams_all_proctors.count_all_exams + ' экзаменов</div><svg></svg>');
+            var svg = div.select("svg");
+            svg.append("text")
+                .attr('x', 10)
+                .attr('y', 10)
+                .text("atat");
         },
         get_key_by_id: function(obj, value){
             for (var key in obj) {
@@ -309,7 +411,7 @@ define([
         do_user_stats: function(e) {
             var element = e.currentTarget;
             var userId = $(element).attr('data-id');
-            this.init_stats_plot("#plot-one-proctor", userId);
+            this.init_plot_one_proctor("#part-one-proctor", userId);
         }
     });
     return View;
