@@ -22,25 +22,8 @@ define([
                 userEditor: new UserEditor()
             };
         },
-        exams_all_proctors: {
-            exams_by_days: {},
-            count_all_exams: 0,
-            count_all_days: 0,
-            all_planned: 0,
-            all_not_planned: 0,
-            all_awaiting: 0,
-            all_running: 0,
-            all_accepted: 0,
-            all_interrupted: 0,
-            all_missed: 0,
-            avg_planned: 0,
-            avg_not_planned: 0,
-            avg_awaiting: 0,
-            avg_running: 0,
-            avg_accepted: 0,
-            avg_interrupted: 0,
-            avg_missed: 0
-        },
+        exams_all_proctors: {},
+            
         exams_every_proctor: [],
         stats_data: {},
         destroy: function() {
@@ -166,15 +149,90 @@ define([
         },
         calculate_exams: function(left_date, right_date){
             var all_exams = [].concat.apply([], this.stats_data.rows.map(function(x){return x.exams}));
+            this.exams_all_proctors = {
+                exams_by_days: {},
+                count_all_exams: 0,
+                count_all_days: 0,
+                all_planned: 0,
+                all_not_planned: 0,
+                all_awaiting: 0,
+                all_running: 0,
+                all_accepted: 0,
+                all_interrupted: 0,
+                all_missed: 0,
+                avg_planned: 0,
+                avg_not_planned: 0,
+                avg_awaiting: 0,
+                avg_running: 0,
+                avg_accepted: 0,
+                avg_interrupted: 0,
+                avg_missed: 0
+            },
+            
             console.log(all_exams);
+            for (var d = new Date(left_date); moment(d) <= moment(right_date); d.setDate(d.getDate() + 1)) {
+                this.exams_all_proctors.exams_by_days[this.formatDate(d)] = {
+                    planned: 0,
+                    not_planned: 0,
+                    awaiting: 0,
+                    running: 0,
+                    accepted: 0,
+                    interrupted: 0,
+                    missed: 0
+                };
+            }
+            
+            var days_count = Object.keys(this.exams_all_proctors.exams_by_days).length;
+            
             for (var i=0; i<all_exams.length; i++){
-                var status = this.get_exam_status(all_exams[i]);
-                console.log(status);
+                var cur = all_exams[i];
+                var status = this.get_exam_status(cur);
+                //console.log(status);
                 this.exams_all_proctors.count_all_exams++;
                 
+                var valuable_date = this.formatDate(cur.startDate ? cur.startDate : (cur.beginDate ? cur.beginDate : cur.leftDate));
                 
-                
+                switch(status){
+                    case 0:
+                        this.exams_all_proctors.all_not_planned++;
+                        this.exams_all_proctors.exams_by_days[valuable_date].not_planned++;
+                        break;
+                    case 1:
+                        this.exams_all_proctors.all_planned++;
+                        this.exams_all_proctors.exams_by_days[valuable_date].planned++;
+                        break;
+                    case 2:
+                        this.exams_all_proctors.all_awaiting++;
+                        this.exams_all_proctors.exams_by_days[valuable_date].awaiting++;
+                        break;
+                    case 3:
+                        this.exams_all_proctors.all_running++;
+                        this.exams_all_proctors.exams_by_days[valuable_date].running++;
+                        break;
+                    case 4:
+                        this.exams_all_proctors.all_accepted++;
+                        this.exams_all_proctors.exams_by_days[valuable_date].accepted++;
+                        break;
+                    case 5:
+                        this.exams_all_proctors.all_interrupted++;
+                        this.exams_all_proctors.exams_by_days[valuable_date].interrupted++;
+                        break;
+                    case 6:
+                        this.exams_all_proctors.all_missed++;
+                        this.exams_all_proctors.exams_by_days[valuable_date].missed++;
+                        break;
+                }
             }
+            this.exams_all_proctors.count_all_days = days_count;
+            
+            this.exams_all_proctors.avg_not_planned = this.exams_all_proctors.all_not_planned / days_count;
+            this.exams_all_proctors.avg_planned     = this.exams_all_proctors.all_planned     / days_count;
+            this.exams_all_proctors.avg_awaiting    = this.exams_all_proctors.all_awaiting    / days_count;
+            this.exams_all_proctors.avg_running     = this.exams_all_proctors.all_running     / days_count;
+            this.exams_all_proctors.avg_accepted    = this.exams_all_proctors.all_accepted    / days_count;
+            this.exams_all_proctors.avg_interrupted = this.exams_all_proctors.all_interrupted / days_count;
+            this.exams_all_proctors.avg_missed      = this.exams_all_proctors.all_missed      / days_count;
+            
             console.log(this.exams_all_proctors);
         },
         init_stats_plot: function(plot_selector, proctor_id, title){
