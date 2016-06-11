@@ -13,7 +13,6 @@ define([
             "click .user-info": "doUserInfo",
             "click .user-stats": "do_user_stats"
         },
-        exams_all_proctors: {},
         stats_data: {},
         initialize: function() {
             // Templates
@@ -170,6 +169,7 @@ define([
                 all_accepted: 0,
                 all_interrupted: 0,
                 all_missed: 0,
+                avg_all_exams: 0,
                 avg_planned: 0,
                 avg_not_planned: 0,
                 avg_awaiting: 0,
@@ -231,13 +231,14 @@ define([
                 }
             }
             temp_stats.count_all_days  = days_count;
-            temp_stats.avg_not_planned = temp_stats.all_not_planned / days_count;
-            temp_stats.avg_planned     = temp_stats.all_planned     / days_count;
-            temp_stats.avg_awaiting    = temp_stats.all_awaiting    / days_count;
-            temp_stats.avg_running     = temp_stats.all_running     / days_count;
-            temp_stats.avg_accepted    = temp_stats.all_accepted    / days_count;
-            temp_stats.avg_interrupted = temp_stats.all_interrupted / days_count;
-            temp_stats.avg_missed      = temp_stats.all_missed      / days_count;
+            temp_stats.avg_all_exams = Math.round((temp_stats.count_all_exams / days_count)*100)/100;
+            temp_stats.avg_not_planned = Math.round((temp_stats.all_not_planned / days_count)*100)/100;
+            temp_stats.avg_planned     = Math.round((temp_stats.all_planned     / days_count)*100)/100;
+            temp_stats.avg_awaiting    = Math.round((temp_stats.all_awaiting    / days_count)*100)/100;
+            temp_stats.avg_running     = Math.round((temp_stats.all_running     / days_count)*100)/100;
+            temp_stats.avg_accepted    = Math.round((temp_stats.all_accepted    / days_count)*100)/100;
+            temp_stats.avg_interrupted = Math.round((temp_stats.all_interrupted / days_count)*100)/100;
+            temp_stats.avg_missed      = Math.round((temp_stats.all_missed      / days_count)*100)/100;
             return temp_stats;
         },
         init_plot_all_proctors: function(part_selector, title){
@@ -250,17 +251,26 @@ define([
             var z = d3.scale.category10();
             var div = d3.select(part_selector);
             div.append("div")
-                .html('<h1>' + proctor_name + '</h1><h2>'+ i18n.t('admin.proctor_statistics.exams_title') +'</h2>' + stats.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
-                 + '<span style="color: '  + z(5) + ';">' + stats.all_planned + i18n.t('admin.proctor_statistics.planned_title') + '</span>'
+                .html('<h1 style="font-size: 16px;">' + proctor_name + '</h1>' + 
+                '<h2>'+ i18n.t('admin.proctor_statistics.exams_title') +'</h2>' + stats.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
+                + '<span style="color: '  + z(5) + ';">' + stats.all_planned + i18n.t('admin.proctor_statistics.planned_title') + '</span>'
                 + '<span style="color: '  + z(4) + ';">'+ stats.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title') + '</span>'
                 + '<span style="color: '  + z(1) + ';">'+ stats.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title') + '</span>'
                 + '<span style="color: '  + z(6) + ';">'+ stats.all_running + i18n.t('admin.proctor_statistics.running_title') + '</span>'
                 + '<span style="color: '  + z(0) + ';">'+ stats.all_accepted + i18n.t('admin.proctor_statistics.accepted_title') + '</span>'
                 + '<span style="color: '  + z(2) + ';">'+ stats.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title') + '</span>'
-                + '<span style="color: '  + z(3) + ';">'+ stats.all_missed + i18n.t('admin.proctor_statistics.missed_title') + '</span>');
+                + '<span style="color: '  + z(3) + ';">'+ stats.all_missed + i18n.t('admin.proctor_statistics.missed_title') + '</span>' +
+                '<h2>'+ i18n.t('admin.proctor_statistics.avg_numbers') +'</h2>' + stats.avg_all_exams + i18n.t('admin.proctor_statistics.exams_per_day')
+                + ', <span style="color: '  + z(5) + ';">' + stats.avg_planned + i18n.t('admin.proctor_statistics.exams_per_day') + ', </span>'
+                + '<span style="color: '  + z(4) + ';">'+ stats.avg_not_planned + i18n.t('admin.proctor_statistics.exams_per_day') + ', </span>'
+                + '<span style="color: '  + z(1) + ';">'+ stats.avg_awaiting + i18n.t('admin.proctor_statistics.exams_per_day') + ', </span>'
+                + '<span style="color: '  + z(6) + ';">'+ stats.avg_running + i18n.t('admin.proctor_statistics.exams_per_day') + ', </span>'
+                + '<span style="color: '  + z(0) + ';">'+ stats.avg_accepted + i18n.t('admin.proctor_statistics.exams_per_day') + ', </span>'
+                + '<span style="color: '  + z(2) + ';">'+ stats.avg_interrupted + i18n.t('admin.proctor_statistics.exams_per_day') + ', </span>'
+                + '<span style="color: '  + z(3) + ';">'+ stats.avg_missed + i18n.t('admin.proctor_statistics.exams_per_day') + '.</span>');
             var causes = ["accepted", "awaiting", "interrupted", 'missed', "not_planned", "planned", "running"];
 
-            var margin = {top: 10, right: 10, bottom: 80, left: 60},
+            var margin = {top: 30, right: 30, bottom: 80, left: 60},
                     width = 650 - margin.left - margin.right,
                     height = 400 - margin.top - margin.bottom;
         
