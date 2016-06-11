@@ -738,8 +738,10 @@ var db = {
         }
     },
     proctor_statistics: {
+        //функция для получения списка прокторов с экзаменами
         search_by_date: function(args, callback) {
             var query = {};
+            //границы указанного периода
             var left_date = moment(args.data.left_date);
             var right_date = moment(args.data.right_date);
             if (args.data.role) query.role = Number(args.data.role);
@@ -750,14 +752,17 @@ var db = {
             var User = require('./models/user');
             var proctors_with_exams = [];
             var proctors_number = 0;
+            //запросы к бд
             User.count(query, function(err, count) {
                 if (err || !count) return callback(err);
                 User.find(query).sort('lastname firstname middlename')
-                    .skip(rows * page).limit(rows).exec(function(err, data) {
+                    .skip(rows * page).limit(rows).exec(function(err, data){
                         data.forEach(function(item, i, arr){
                             Exam.find({inspector: item, leftDate: {"$gte": left_date, "$lte": right_date}}, function(err, exs){
                                 if (!err){
+                                    //проверка попадания фактической или планируемой даты (при их наличии) в указанный период
                                     var docs = exs.filter(function(x){return ((x.startDate ? (x.startDate <= right_date) : true) && (x.beginDate? (x.beginDate <= right_date) : true))});
+                                    //формирование озвращаемого объекта
                                     if (docs.length) {
                                         proctors_with_exams.push({stats_is_active: true});
                                     } else {

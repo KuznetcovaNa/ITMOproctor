@@ -124,6 +124,7 @@ define([
 
             return this;
         },
+        //получение статуса экзамена по его полям
         get_exam_status: function(row){
             var status = 0;
             var now = app.now();
@@ -143,6 +144,7 @@ define([
             }
             return status;
         },
+        //получение объекта с данными статистики для конкретного проктора
         calculate_exams_for_proctor: function(left_date, right_date, proctor_id){
             var all_exams = [];
             for (var i = 0; i < this.stats_data.rows.length; i++) {
@@ -153,10 +155,12 @@ define([
             }
             return this.calculate_exams_by_list(left_date, right_date, all_exams);
         },
+        //получение объекта с данными статистики для всех прокторов
         calculate_exams_for_all: function(left_date, right_date){
             var all_exams = [].concat.apply([], this.stats_data.rows.map(function(x){return x.exams}));
             return this.calculate_exams_by_list(left_date, right_date, all_exams);
         },
+        //создание объекта с данными статистики по списку экзаменов
         calculate_exams_by_list: function(left_date, right_date, all_exams){
             var temp_stats = {
                 exams_by_days: {},
@@ -241,12 +245,14 @@ define([
             temp_stats.avg_missed      = Math.round((temp_stats.all_missed      / days_count)*100)/100;
             return temp_stats;
         },
+        //заполнение области со статистикой для всех прокторов
         init_plot_all_proctors: function(part_selector, title){
             $(part_selector).empty();
             var stats = this.calculate_exams_for_all(this.getDates().from, this.getDates().to);
             var proctor_name = title;
             this.fill_plot_area(part_selector, stats, proctor_name);
         },
+        //заполнение области со статистикой, используется библиотека D3.js
         fill_plot_area: function(part_selector, stats, proctor_name){
             var z = d3.scale.category10();
             var div = d3.select(part_selector);
@@ -331,6 +337,7 @@ define([
                     .attr("class", "axis axis--y")
                     .call(yAxis);
         },
+        //заполнение области статистики для конкретного проктора
         init_plot_one_proctor: function(part_selector, proctor_id, title){
             $(part_selector).empty();
             var proctor_name = title;
@@ -345,6 +352,7 @@ define([
                     .html(proctor_name);
             }
         },
+        //получение ключа по идентификатору 
         get_key_by_id: function(obj, value){
             for (var key in obj) {
                 if (obj[key]._id == value) {
@@ -362,6 +370,7 @@ define([
             var tpl = _.template(this.templates['user-item-tpl']);
             return tpl(data);
         },
+        //заполнение поля со ссылкой на статистику проктора
         format_stats: function(val, row){
             if (!row) return;
             var data = {
@@ -402,6 +411,7 @@ define([
             var userId = $(element).attr('data-id');
             this.view.userViewer.doOpen(userId);
         },
+        //отображение статистики по проктору
         do_user_stats: function(e) {
             var element = e.currentTarget;
             var userId = $(element).attr('data-id');

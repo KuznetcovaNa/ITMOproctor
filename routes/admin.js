@@ -41,11 +41,11 @@ router.get('/exams', function(req, res) {
         }
     });
 });
+//Получение списка прокторов с имеющимися экзаменами за указанный период
 router.get('/proctor_statistics', function(req, res) {
  var args = {
         data: req.query
     };
-    //db.proctor_statistics.search(args, function(err, data, count) {
     db.proctor_statistics.search_by_date(args, function(err, data, count) {
         if (!err && data) {
             res.json({
