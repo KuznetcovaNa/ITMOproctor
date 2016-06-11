@@ -84,3 +84,14 @@ a {
     background: #ddddff;
     color: inherit;
 }
+
+.axis text {
+        font-size: 10px;
+    }
+    
+.axis line,
+.axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}

@@ -120,7 +120,7 @@ define([
             });
             
             this.$('#users-statistics-plot').panel({
-                height:400,
+                height:600,
                 noheader: true
             });
 
@@ -326,50 +326,98 @@ define([
         },
         init_plot_all_proctors: function(part_selector, title){
             $(part_selector).empty();
+            var stats = this.exams_all_proctors;
+            var proctor_name = title;
+            this.fill_plot_area(part_selector, stats, proctor_name);
+        },
+        fill_plot_area: function(part_selector, stats, proctor_name){
             var div = d3.select(part_selector);
             div.append("div")
-                .html('<h3>' + title + '</h3><div>'
-                 + i18n.t('admin.proctor_statistics.exams_title') + this.exams_all_proctors.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
-                + this.exams_all_proctors.all_planned + i18n.t('admin.proctor_statistics.planned_title')
-                + this.exams_all_proctors.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title')
-                + this.exams_all_proctors.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title')
-                + this.exams_all_proctors.all_running + i18n.t('admin.proctor_statistics.running_title')
-                + this.exams_all_proctors.all_accepted + i18n.t('admin.proctor_statistics.accepted_title')
-                + this.exams_all_proctors.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title')
-                + this.exams_all_proctors.all_missed + i18n.t('admin.proctor_statistics.missed_title')
-                + '</div><svg></svg>');
-            var svg = div.select("svg");
-            svg.append("text")
-                .attr('x', 10)
-                .attr('y', 10)
-                .text("plot");
+                .html('<h3>' + proctor_name + '</h3><div>'
+                 + i18n.t('admin.proctor_statistics.exams_title') + stats.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
+                + stats.all_planned + i18n.t('admin.proctor_statistics.planned_title')
+                + stats.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title')
+                + stats.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title')
+                + stats.all_running + i18n.t('admin.proctor_statistics.running_title')
+                + stats.all_accepted + i18n.t('admin.proctor_statistics.accepted_title')
+                + stats.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title')
+                + stats.all_missed + i18n.t('admin.proctor_statistics.missed_title')
+                + '</div>');
+            var causes = ["accepted", "awaiting", "interrupted", 'missed', "not_planned", "planned", "running"];
+
+            var margin = {top: 10, right: 10, bottom: 80, left: 60},
+                    width = 650 - margin.left - margin.right,
+                    height = 400 - margin.top - margin.bottom;
+        
+            var x = d3.scale.ordinal()
+                    .rangeRoundBands([0, width]);
+        
+            var y = d3.scale.linear()
+                    .rangeRound([height, 0]);
+        
+            var z = d3.scale.category10();
+            var xAxis = d3.svg.axis()
+                    .scale(x);
+        
+            var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left");
+        
+            var svg = d3.select(part_selector).append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+            var layers = d3.layout.stack()(causes.map(function(c) {
+                return Object.keys(stats.exams_by_days).map(
+                        function(key) {
+                            return {x: key, y: stats.exams_by_days[key][c]};
+                        });
+            }));
+        
+            x.domain(layers[0].map(function(d) { return d.x; }));
+            y.domain([0, d3.max(layers[layers.length - 1], function(d) { return d.y0 + d.y; })]).nice();
+        
+            var layer = svg.selectAll(".layer")
+                    .data(layers)
+                    .enter().append("g")
+                    .attr("class", "layer")
+                    .style("fill", function(d, i) { return z(i); });
+        
+            layer.selectAll("rect")
+                    .data(function(d) { return d; })
+                    .enter().append("rect")
+                    .attr("x", function(d) { return x(d.x); })
+                    .attr("y", function(d) { return y(d.y + d.y0); })
+                    .attr("height", function(d) { return y(d.y0) - y(d.y + d.y0); })
+                    .attr("width", x.rangeBand() - 1);
+        
+            svg.append("g")
+                    .attr("class", "axis axis--x")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis)
+                    .selectAll("text")
+                    .attr("y", 0)
+                    .attr("x", 9)
+                    .attr("dy", ".35em")
+                    .attr("transform", "rotate(90)")
+                    .style("text-anchor", "start");
+        
+            svg.append("g")
+                    .attr("class", "axis axis--y")
+                    .call(yAxis);
         },
         init_plot_one_proctor: function(part_selector, proctor_id, title){
             $(part_selector).empty();
             var proctor_name = title;
             var user_stats;
-            var div = d3.select(part_selector);
             if (proctor_id) {
                 proctor_name = this.stats_data.rows[this.get_key_by_id(this.stats_data.rows, proctor_id)].username;
                 user_stats = this.calculate_exams_for_proctor(this.getDates().from, this.getDates().to, proctor_id);
-                console.log(user_stats);
-                div.append("div")
-                    .html('<h3>' + proctor_name + '</h3><div>'
-                    + i18n.t('admin.proctor_statistics.exams_title') + user_stats.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
-                    + user_stats.all_planned + i18n.t('admin.proctor_statistics.planned_title')
-                    + user_stats.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title')
-                    + user_stats.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title')
-                    + user_stats.all_running + i18n.t('admin.proctor_statistics.running_title')
-                    + user_stats.all_accepted + i18n.t('admin.proctor_statistics.accepted_title')
-                    + user_stats.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title')
-                    + user_stats.all_missed + i18n.t('admin.proctor_statistics.missed_title')
-                    + '</div><svg></svg>');
-                var svg = div.select("svg");
-                svg.append("text")
-                    .attr('x', 10)
-                    .attr('y', 10)
-                    .text("plot");
+                this.fill_plot_area(part_selector, user_stats, proctor_name);
             } else {
+                var div = d3.select(part_selector);
                 div.append("h3")
                     .html(proctor_name);
             }
