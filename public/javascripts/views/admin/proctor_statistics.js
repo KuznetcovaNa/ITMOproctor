@@ -13,6 +13,8 @@ define([
             "click .user-info": "doUserInfo",
             "click .user-stats": "do_user_stats"
         },
+        exams_all_proctors: {},
+        stats_data: {},
         initialize: function() {
             // Templates
             this.templates = _.parseTemplate(template);
@@ -22,8 +24,6 @@ define([
                 userEditor: new UserEditor()
             };
         },
-        exams_all_proctors: {},
-        stats_data: {},
         destroy: function() {
             for (var v in this.view) {
                 if (this.view[v]) this.view[v].destroy();
@@ -103,7 +103,6 @@ define([
                     data = data || [];
                     var text = self.$TextSearch.textbox('getValue').trim();
                     self.stats_data = data;
-                    self.calculate_exams(self.getDates().from, self.getDates().to);
                     self.init_plot_all_proctors("#part-all-proctors", i18n.t('admin.proctor_statistics.all_proctors'));
                     self.init_plot_one_proctor("#part-one-proctor", false, i18n.t('admin.proctor_statistics.no_proctor'));
                     if (_.isEmpty(text)) {
@@ -145,7 +144,6 @@ define([
             }
             return status;
         },
-        
         calculate_exams_for_proctor: function(left_date, right_date, proctor_id){
             var all_exams = [];
             for (var i = 0; i < this.stats_data.rows.length; i++) {
@@ -154,95 +152,14 @@ define([
                     break;
                 }
             }
-            
-            var exams_this_proctor = {
-                exams_by_days: {},
-                count_all_exams: 0,
-                count_all_days: 0,
-                all_planned: 0,
-                all_not_planned: 0,
-                all_awaiting: 0,
-                all_running: 0,
-                all_accepted: 0,
-                all_interrupted: 0,
-                all_missed: 0,
-                avg_planned: 0,
-                avg_not_planned: 0,
-                avg_awaiting: 0,
-                avg_running: 0,
-                avg_accepted: 0,
-                avg_interrupted: 0,
-                avg_missed: 0
-            };
-            
-            for (var d = new Date(left_date); moment(d) <= moment(right_date); d.setDate(d.getDate() + 1)) {
-                exams_this_proctor.exams_by_days[this.formatDate(d)] = {
-                    planned: 0,
-                    not_planned: 0,
-                    awaiting: 0,
-                    running: 0,
-                    accepted: 0,
-                    interrupted: 0,
-                    missed: 0
-                };
-            }
-            var days_count = Object.keys(exams_this_proctor.exams_by_days).length;
-            
-            for (var i=0; i<all_exams.length; i++){
-                var cur = all_exams[i];
-                var status = this.get_exam_status(cur);
-                exams_this_proctor.count_all_exams++;
-                
-                var valuable_date = this.formatDate(cur.startDate ? cur.startDate : (cur.beginDate ? cur.beginDate : cur.leftDate));
-                
-                switch(status){
-                    case 0:
-                        exams_this_proctor.all_not_planned++;
-                        exams_this_proctor.exams_by_days[valuable_date].not_planned++;
-                        break;
-                    case 1:
-                        exams_this_proctor.all_planned++;
-                        exams_this_proctor.exams_by_days[valuable_date].planned++;
-                        break;
-                    case 2:
-                        exams_this_proctor.all_awaiting++;
-                        exams_this_proctor.exams_by_days[valuable_date].awaiting++;
-                        break;
-                    case 3:
-                        exams_this_proctor.all_running++;
-                        exams_this_proctor.exams_by_days[valuable_date].running++;
-                        break;
-                    case 4:
-                        exams_this_proctor.all_accepted++;
-                        exams_this_proctor.exams_by_days[valuable_date].accepted++;
-                        break;
-                    case 5:
-                        exams_this_proctor.all_interrupted++;
-                        exams_this_proctor.exams_by_days[valuable_date].interrupted++;
-                        break;
-                    case 6:
-                        exams_this_proctor.all_missed++;
-                        exams_this_proctor.exams_by_days[valuable_date].missed++;
-                        break;
-                }
-            }
-            exams_this_proctor.count_all_days  = days_count;
-            exams_this_proctor.avg_not_planned = exams_this_proctor.all_not_planned / days_count;
-            exams_this_proctor.avg_planned     = exams_this_proctor.all_planned     / days_count;
-            exams_this_proctor.avg_awaiting    = exams_this_proctor.all_awaiting    / days_count;
-            exams_this_proctor.avg_running     = exams_this_proctor.all_running     / days_count;
-            exams_this_proctor.avg_accepted    = exams_this_proctor.all_accepted    / days_count;
-            exams_this_proctor.avg_interrupted = exams_this_proctor.all_interrupted / days_count;
-            exams_this_proctor.avg_missed      = exams_this_proctor.all_missed      / days_count;
-            
-            console.log(exams_this_proctor);
-            return exams_this_proctor;
+            return this.calculate_exams_by_list(left_date, right_date, all_exams);
         },
-        
-        calculate_exams: function(left_date, right_date){
+        calculate_exams_for_all: function(left_date, right_date){
             var all_exams = [].concat.apply([], this.stats_data.rows.map(function(x){return x.exams}));
-            this.exams_every_proctor = {};
-            this.exams_all_proctors = {
+            return this.calculate_exams_by_list(left_date, right_date, all_exams);
+        },
+        calculate_exams_by_list: function(left_date, right_date, all_exams){
+            var temp_stats = {
                 exams_by_days: {},
                 count_all_exams: 0,
                 count_all_days: 0,
@@ -261,8 +178,9 @@ define([
                 avg_interrupted: 0,
                 avg_missed: 0
             };
+            
             for (var d = new Date(left_date); moment(d) <= moment(right_date); d.setDate(d.getDate() + 1)) {
-                this.exams_all_proctors.exams_by_days[this.formatDate(d)] = {
+                temp_stats.exams_by_days[this.formatDate(d)] = {
                     planned: 0,
                     not_planned: 0,
                     awaiting: 0,
@@ -272,77 +190,74 @@ define([
                     missed: 0
                 };
             }
-            
-            var days_count = Object.keys(this.exams_all_proctors.exams_by_days).length;
+            var days_count = Object.keys(temp_stats.exams_by_days).length;
             
             for (var i=0; i<all_exams.length; i++){
                 var cur = all_exams[i];
                 var status = this.get_exam_status(cur);
-                this.exams_all_proctors.count_all_exams++;
+                temp_stats.count_all_exams++;
                 
                 var valuable_date = this.formatDate(cur.startDate ? cur.startDate : (cur.beginDate ? cur.beginDate : cur.leftDate));
                 
                 switch(status){
                     case 0:
-                        this.exams_all_proctors.all_not_planned++;
-                        this.exams_all_proctors.exams_by_days[valuable_date].not_planned++;
+                        temp_stats.all_not_planned++;
+                        temp_stats.exams_by_days[valuable_date].not_planned++;
                         break;
                     case 1:
-                        this.exams_all_proctors.all_planned++;
-                        this.exams_all_proctors.exams_by_days[valuable_date].planned++;
+                        temp_stats.all_planned++;
+                        temp_stats.exams_by_days[valuable_date].planned++;
                         break;
                     case 2:
-                        this.exams_all_proctors.all_awaiting++;
-                        this.exams_all_proctors.exams_by_days[valuable_date].awaiting++;
+                        temp_stats.all_awaiting++;
+                        temp_stats.exams_by_days[valuable_date].awaiting++;
                         break;
                     case 3:
-                        this.exams_all_proctors.all_running++;
-                        this.exams_all_proctors.exams_by_days[valuable_date].running++;
+                        temp_stats.all_running++;
+                        temp_stats.exams_by_days[valuable_date].running++;
                         break;
                     case 4:
-                        this.exams_all_proctors.all_accepted++;
-                        this.exams_all_proctors.exams_by_days[valuable_date].accepted++;
+                        temp_stats.all_accepted++;
+                        temp_stats.exams_by_days[valuable_date].accepted++;
                         break;
                     case 5:
-                        this.exams_all_proctors.all_interrupted++;
-                        this.exams_all_proctors.exams_by_days[valuable_date].interrupted++;
+                        temp_stats.all_interrupted++;
+                        temp_stats.exams_by_days[valuable_date].interrupted++;
                         break;
                     case 6:
-                        this.exams_all_proctors.all_missed++;
-                        this.exams_all_proctors.exams_by_days[valuable_date].missed++;
+                        temp_stats.all_missed++;
+                        temp_stats.exams_by_days[valuable_date].missed++;
                         break;
                 }
             }
-            this.exams_all_proctors.count_all_days = days_count;
-            this.exams_all_proctors.avg_not_planned = this.exams_all_proctors.all_not_planned / days_count;
-            this.exams_all_proctors.avg_planned     = this.exams_all_proctors.all_planned     / days_count;
-            this.exams_all_proctors.avg_awaiting    = this.exams_all_proctors.all_awaiting    / days_count;
-            this.exams_all_proctors.avg_running     = this.exams_all_proctors.all_running     / days_count;
-            this.exams_all_proctors.avg_accepted    = this.exams_all_proctors.all_accepted    / days_count;
-            this.exams_all_proctors.avg_interrupted = this.exams_all_proctors.all_interrupted / days_count;
-            this.exams_all_proctors.avg_missed      = this.exams_all_proctors.all_missed      / days_count;
-            
-            console.log(this.exams_all_proctors);
+            temp_stats.count_all_days  = days_count;
+            temp_stats.avg_not_planned = temp_stats.all_not_planned / days_count;
+            temp_stats.avg_planned     = temp_stats.all_planned     / days_count;
+            temp_stats.avg_awaiting    = temp_stats.all_awaiting    / days_count;
+            temp_stats.avg_running     = temp_stats.all_running     / days_count;
+            temp_stats.avg_accepted    = temp_stats.all_accepted    / days_count;
+            temp_stats.avg_interrupted = temp_stats.all_interrupted / days_count;
+            temp_stats.avg_missed      = temp_stats.all_missed      / days_count;
+            return temp_stats;
         },
         init_plot_all_proctors: function(part_selector, title){
             $(part_selector).empty();
-            var stats = this.exams_all_proctors;
+            var stats = this.calculate_exams_for_all(this.getDates().from, this.getDates().to);
             var proctor_name = title;
             this.fill_plot_area(part_selector, stats, proctor_name);
         },
         fill_plot_area: function(part_selector, stats, proctor_name){
+            var z = d3.scale.category10();
             var div = d3.select(part_selector);
             div.append("div")
-                .html('<h3>' + proctor_name + '</h3><div>'
-                 + i18n.t('admin.proctor_statistics.exams_title') + stats.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
-                + stats.all_planned + i18n.t('admin.proctor_statistics.planned_title')
-                + stats.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title')
-                + stats.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title')
-                + stats.all_running + i18n.t('admin.proctor_statistics.running_title')
-                + stats.all_accepted + i18n.t('admin.proctor_statistics.accepted_title')
-                + stats.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title')
-                + stats.all_missed + i18n.t('admin.proctor_statistics.missed_title')
-                + '</div>');
+                .html('<h1>' + proctor_name + '</h1><h2>'+ i18n.t('admin.proctor_statistics.exams_title') +'</h2>' + stats.count_all_exams + i18n.t('admin.proctor_statistics.all_title')
+                 + '<span style="color: '  + z(5) + ';">' + stats.all_planned + i18n.t('admin.proctor_statistics.planned_title') + '</span>'
+                + '<span style="color: '  + z(4) + ';">'+ stats.all_not_planned + i18n.t('admin.proctor_statistics.not_planned_title') + '</span>'
+                + '<span style="color: '  + z(1) + ';">'+ stats.all_awaiting + i18n.t('admin.proctor_statistics.awaiting_title') + '</span>'
+                + '<span style="color: '  + z(6) + ';">'+ stats.all_running + i18n.t('admin.proctor_statistics.running_title') + '</span>'
+                + '<span style="color: '  + z(0) + ';">'+ stats.all_accepted + i18n.t('admin.proctor_statistics.accepted_title') + '</span>'
+                + '<span style="color: '  + z(2) + ';">'+ stats.all_interrupted + i18n.t('admin.proctor_statistics.interrupted_title') + '</span>'
+                + '<span style="color: '  + z(3) + ';">'+ stats.all_missed + i18n.t('admin.proctor_statistics.missed_title') + '</span>');
             var causes = ["accepted", "awaiting", "interrupted", 'missed', "not_planned", "planned", "running"];
 
             var margin = {top: 10, right: 10, bottom: 80, left: 60},
@@ -354,8 +269,6 @@ define([
         
             var y = d3.scale.linear()
                     .rangeRound([height, 0]);
-        
-            var z = d3.scale.category10();
             var xAxis = d3.svg.axis()
                     .scale(x);
         
@@ -383,7 +296,7 @@ define([
                     .data(layers)
                     .enter().append("g")
                     .attr("class", "layer")
-                    .style("fill", function(d, i) { return z(i); });
+                    .style("fill", function(d, i) {return z(i); });
         
             layer.selectAll("rect")
                     .data(function(d) { return d; })

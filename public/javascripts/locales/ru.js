@@ -419,7 +419,7 @@ define({
             "stats_not_active": "Экзамены не обнаружены",
             "all_proctors": "Все прокторы",
             "no_proctor": "Выберите проктора для просмотра подробной статистики",
-            "exams_title": "Экзамены: ",
+            "exams_title": "Экзамены",
             "not_planned_title": " не запланировано, ",
             "planned_title": " запланировано, ",
             "awaiting_title": " ожидает, ",
